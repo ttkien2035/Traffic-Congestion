@@ -3,6 +3,33 @@ from yolov5.detect_function import vehicle_detection
 
 import numpy as np
 import time
+from tornado import httpclient
+import base64
+from PIL import Image
+import io
+http_client = httpclient.HTTPClient()
+classes = ['motorcycle', 'car', 'bus', 'truck']
+def get_image(id_camera):
+    response = http_client.fetch("http://giaothong.hochiminhcity.gov.vn/render/ImageHandler.ashx?id={}".format(id_camera))
+    image = Image.open(io.BytesIO(response.body))
+    image = np.array(image)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    return image
+
+def count_number_per_class(clses):
+    data = {
+        "motorcycle": 0,
+        "car": 0,
+        "bus": 0,
+        "truck": 0
+    }
+
+    for c in clses:
+        cls = classes[int(c)]
+        data[cls] += 1
+    
+    print(data)
 
 #get frame from api to detect 
 def api_frame_detect(frame):
@@ -48,7 +75,20 @@ def image_detect(img_path):
     cv2.imwrite(img_path.split('.')[0]+'_result.jpg',img)
     # print(frame.shape)
 
+def image_detect_img(frame):
+    #load model
+    detect_net = vehicle_detection('yolov5s6_09_07_2021.pt')
 
+    boxes, confs, clses, img = detect_net.predict(frame)
+    # print(boxes)
+    # print(confs)
+    # print(clses)
+    count_number_per_class(clses)
+    # cv2.imshow('frame', cv2.resize(img, (img.shape[1] // 2, img.shape[0] // 2)))
+    cv2.imshow('frame', img)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+    cv2.imwrite('test.jpg',img)
 
 def video_detect(video_path):
     #load model
@@ -101,12 +141,16 @@ def video_detect(video_path):
     video.release()
     cv2.destroyAllWindows()
     print("The video was successfully saved")
-    # print(size)
-
+   
 if __name__ == '__main__':
     
-    img_path='kien.jpg'
-    image_detect(img_path)
+    # img_path='kien.jpg'
+    # image_detect(img_path)
+
+    id_camera = "5d8cd542766c880017188948"  # Thu Duc
+    # id_camera = "5efd47ae942cda00169edf5c"
+    img = get_image(id_camera)
+    image_detect_img(img)
 
     # video_path = 'cam_14.mp4'
     # video_detect(video_path)
