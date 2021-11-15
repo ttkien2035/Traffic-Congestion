@@ -9,6 +9,7 @@ from PIL import Image
 import io
 http_client = httpclient.HTTPClient()
 classes = ['motorcycle', 'car', 'bus', 'truck']
+
 def get_image(id_camera):
     response = http_client.fetch("http://giaothong.hochiminhcity.gov.vn/render/ImageHandler.ashx?id={}".format(id_camera))
     image = Image.open(io.BytesIO(response.body))
@@ -17,8 +18,9 @@ def get_image(id_camera):
 
     return image
 
-def count_number_per_class(clses):
+def count_number_per_class(id_camera, clses):
     data = {
+        "id": id_camera,
         "motorcycle": 0,
         "car": 0,
         "bus": 0,
@@ -29,7 +31,7 @@ def count_number_per_class(clses):
         cls = classes[int(c)]
         data[cls] += 1
     
-    print(data)
+    return data
 
 #get frame from api to detect 
 def api_frame_detect(frame):
@@ -80,15 +82,17 @@ def image_detect_img(frame):
     detect_net = vehicle_detection('yolov5s6_09_07_2021.pt')
 
     boxes, confs, clses, img = detect_net.predict(frame)
+
+    return clses
     # print(boxes)
     # print(confs)
     # print(clses)
-    count_number_per_class(clses)
+    # count_number_per_class(clses)
     # cv2.imshow('frame', cv2.resize(img, (img.shape[1] // 2, img.shape[0] // 2)))
-    cv2.imshow('frame', img)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
-    cv2.imwrite('test.jpg',img)
+    # cv2.imshow('frame', img)
+    # cv2.waitKey()
+    # cv2.destroyAllWindows()
+    # cv2.imwrite('test.jpg',img)
 
 def video_detect(video_path):
     #load model
@@ -147,10 +151,21 @@ if __name__ == '__main__':
     # img_path='kien.jpg'
     # image_detect(img_path)
 
-    id_camera = "5d8cd542766c880017188948"  # Thu Duc
+    # id_camera = "5d8cd542766c880017188948"  # Thu Duc
     # id_camera = "5efd47ae942cda00169edf5c"
-    img = get_image(id_camera)
-    image_detect_img(img)
+    # id_camera = "5fc9fc8da461de0016333500"
+    # img = get_image(id_camera)
+    # clses = image_detect_img(img)
+    # data = count_number_per_class(id_camera, clses)
+    # print(data)
+
+    while True:
+        id_camera = "5d8cd542766c880017188948"  # Thu Duc
+        img = get_image(id_camera)
+        clses = image_detect_img(img)
+        data = count_number_per_class(id_camera, clses)
+        print(data)
+        time.sleep(14)
 
     # video_path = 'cam_14.mp4'
     # video_detect(video_path)
